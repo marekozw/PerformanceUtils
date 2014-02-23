@@ -1,5 +1,5 @@
 (function (window, undefined) {
-  var PerformanceUtils = {};
+  var PerformanceUtils = window.PerformanceUtils || {};
 
   var errors = (function () {
     var NotAFunctionError = function (message) {
