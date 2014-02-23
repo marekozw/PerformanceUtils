@@ -3,26 +3,33 @@
 
   var errors = (function () {
     var NotAFunctionError = function (message) {
-      this.name = "Not A Function Error"
+      this.name = "Not A Function Error";
       this.message = message;
     };
     var FunctionNotRegisteredError = function (message) {
-      this.name = "Function Not Registered"
+      this.name = "Function Not Registered";
+      this.message = message;
+    };
+    var IllegalAliasError = function (message) {
+      this.name = "Illegal Alias Error";
       this.message = message;
     };
     NotAFunctionError.prototype = new Error();
     FunctionNotRegisteredError.prototype = new Error();
+    IllegalAliasError.prototype = new Error();
 
     return {
       NotAFunctionError: NotAFunctionError,
-      FunctionNotRegisteredError: FunctionNotRegisteredError
+      FunctionNotRegisteredError: FunctionNotRegisteredError,
+      IllegalAliasError: IllegalAliasError
     };
   })();
 
   var assets = {
     ANONYMOUS_FUNCTION_WARN: 'Make sure to register non-anonymous function or add an alias for celarer performance output.',
     ANONYMOUS_FUNCTION_TRACE: 'Registered function is anonymous.',
-    FUNCTION_NOT_REGISTERED: 'Use .register() method before using .run()'
+    FUNCTION_NOT_REGISTERED: 'Use .register() method before using .run()',
+    ILLEGALE_ALIAS: 'Alias must be a string or a function that returns a string'
   };
 
   PerformanceUtils.SimplePerformanceWatcher = function (options) {
@@ -46,8 +53,24 @@
         console.warn(MODULE_NAME, '\n' + assets.ANONYMOUS_FUNCTION_WARN);
         console.trace(MODULE_NAME, '\n' + assets.ANONYMOUS_FUNCTION_TRACE);
       }
+      if (typeof alias === 'undefined') {
+        _alias = alias;
+      } else {
+        if (typeof alias !== 'string') {
+          if (typeof alias !== 'function') {
+            throw new errors.IllegalAliasError('Alias is ' + alias + '. ' + assets.ILLEGALE_ALIAS);
+          }
+          var stringAlias = alias.call();
+          if (typeof stringAlias !== 'string') {
+            throw new errors.IllegalAliasError('Alias returns ' + stringAlias + '. ' + assets.ILLEGALE_ALIAS);
+          }
+          _alias = stringAlias;
+        } else {
+          _alias = alias;
+        }
+      }
+
       _fn = fn;
-      _alias = alias;
     }
 
     var runFunction = function (context, args) {
@@ -65,6 +88,16 @@
       run: runFunction
     };
   }
+
+  window.PerformanceUtils = PerformanceUtils;
+})(window);
+
+(function (window, undefined) {
+  var PerformanceUtils = window.PerformanceUtils || {};
+
+  PerformanceUtils.MicrosecondsPerformanceWatcher = function (options) {
+
+  };
 
   window.PerformanceUtils = PerformanceUtils;
 })(window);
